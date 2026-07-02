@@ -1,101 +1,443 @@
-[index.html.html](https://github.com/user-attachments/files/29610202/index.html.html)
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="google-adsense-account" content="ca-pub-6220782276777729">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>極簡創作者工具箱 | 免費線上圖片壓縮、QR Code 產生、安全密碼生成</title>
+    <meta name="description" content="最實用的線上免安裝工具箱，提供圖片壓縮、QR Code 產生、安全密碼生成，完全在瀏覽器本地端運行，安全不外洩。">
+    <meta name="google-adsense-account" content="ca-pub-6220782276777729">
+    
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6220782276777729" crossorigin="anonymous"></script>
-    <meta name="description" content="...">
-    <!-- 其他 CSS 和 Script -->
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QRious Library (Local QR Generation to prevent CORS issues) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    
+    <style>
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* 隱藏滾動條 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between font-sans overflow-x-hidden">
 
-    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <div class="bg-indigo-600 p-2 rounded-lg text-white">
+    <!-- 浮動提示框 (Toast Notification Overlay) -->
+    <div id="toast-container" class="fixed top-24 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- 導覽列 Header -->
+    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-600/30">
                     <i data-lucide="wrench" class="w-6 h-6"></i>
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight text-white">CreatorTools</h1>
+                    <p class="text-xs text-slate-400">極簡、快速、安全的創作者工具箱</p>
                 </div>
             </div>
-            <!-- Professional Navigation or Link -->
-            <nav>
-                <a href="#" class="text-slate-400 hover:text-white text-sm transition">關於我們</a>
-            </nav>
+            <!-- 贊助按鈕 -->
+            <a href="https://ko-fi.com" target="_blank" class="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white font-semibold px-4 py-2 rounded-xl transition text-sm shadow-lg shadow-rose-900/20">
+                <i data-lucide="coffee" class="w-4 h-4"></i>
+                贊助我一杯咖啡
+            </a>
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 py-8 w-full flex-grow grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <!-- 主容器 Main Container -->
+    <main class="max-w-6xl mx-auto px-4 py-8 w-full flex-grow flex flex-col lg:flex-row gap-8">
         
-        <div class="lg:col-span-1 flex flex-col gap-2">
+        <!-- 左側側邊欄 Left Sidebar -->
+        <div class="w-full lg:w-64 shrink-0 flex flex-col gap-2">
             <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">工具選單</h2>
             <button onclick="switchTab('compressor')" id="btn-compressor" class="tab-btn active flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-medium text-left transition w-full">
-                <i data-lucide="image" class="w-5 h-5"></i> 圖片極速壓縮
+                <i data-lucide="image" class="w-5 h-5"></i>
+                圖片極速壓縮
             </button>
             <button onclick="switchTab('qrcode')" id="btn-qrcode" class="tab-btn flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300 font-medium text-left transition w-full">
-                <i data-lucide="qr-code" class="w-5 h-5"></i> QR Code 產生器
+                <i data-lucide="qr-code" class="w-5 h-5"></i>
+                QR Code 產生器
             </button>
             <button onclick="switchTab('password')" id="btn-password" class="tab-btn flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300 font-medium text-left transition w-full">
-                <i data-lucide="key" class="w-5 h-5"></i> 安全密碼產生器
+                <i data-lucide="key" class="w-5 h-5"></i>
+                安全密碼產生器
             </button>
 
-            <!-- Affiliate / Recommendation Zone -->
-            <div class="mt-8 border border-slate-800 rounded-2xl p-4 bg-slate-950">
-                <span class="text-[10px] text-slate-600 font-bold uppercase tracking-widest mb-4 block">精選推薦</span>
-                <a href="#" class="block p-3 rounded-lg hover:bg-slate-900 border border-slate-800 transition mb-2">
-                    <p class="text-sm font-semibold text-white">Cloud Hosting</p>
-                    <p class="text-xs text-slate-500">高效能雲端伺服器推薦</p>
-                </a>
-                <a href="#" class="block p-3 rounded-lg hover:bg-slate-900 border border-slate-800 transition">
-                    <p class="text-sm font-semibold text-white">Design Pro</p>
-                    <p class="text-xs text-slate-500">專業創作者必備工具</p>
-                </a>
+            <!-- 側欄廣告版位 -->
+            <div class="mt-6 border border-slate-800 rounded-2xl p-4 bg-slate-950 flex flex-col items-center justify-center min-h-[250px] text-center">
+                <span class="text-xs text-slate-600 mb-2 font-mono">SPONSORED ADVERTISEMENT</span>
+                <div class="w-full h-[200px] bg-slate-900 rounded border border-dashed border-slate-800 flex items-center justify-center text-slate-500 text-sm">
+                    廣告版位 (側欄)
+                </div>
             </div>
         </div>
 
-        <div class="lg:col-span-3 flex flex-col gap-6">
+        <!-- 右側工作區 Right Workspace -->
+        <div class="flex-grow min-w-0 flex flex-col gap-6">
+            
+            <!-- 工具 1：圖片極速壓縮 -->
             <div id="tab-compressor" class="tab-content active bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl">
-                <h3 class="text-xl font-bold text-white mb-6">圖片極速壓縮</h3>
+                <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="image" class="text-indigo-500"></i> 圖片極速壓縮
+                </h3>
+                <p class="text-slate-400 text-sm mb-6">完全在您的瀏覽器本地端進行安全壓縮，不限制檔案大小，隱私絕對不外洩。</p>
+                
                 <div class="border-2 border-dashed border-slate-800 rounded-2xl p-12 text-center hover:border-indigo-500/50 transition cursor-pointer relative" id="drop-zone">
-                    <input type="file" id="image-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
-                    <p class="text-slate-300">點擊或拖曳上傳圖片</p>
+                    <input type="file" id="image-input" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="p-4 bg-slate-900 rounded-full text-slate-400">
+                            <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+                        </div>
+                        <p class="text-slate-300 font-medium">拖曳圖片到此處，或點擊選擇圖片</p>
+                        <p class="text-xs text-slate-500">支援 JPG, PNG, WEBP</p>
+                    </div>
+                </div>
+
+                <div id="compressor-workspace" class="mt-8 space-y-6 hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <p class="text-xs text-slate-500 mb-1">原始大小</p>
+                            <p class="text-lg font-semibold" id="original-size">0 KB</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-indigo-900/30">
+                            <p class="text-xs text-indigo-400 mb-1">預估壓縮後</p>
+                            <p class="text-lg font-semibold text-indigo-400" id="compressed-size">0 KB</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-300">壓縮品質: <span id="quality-val" class="font-bold text-white">80%</span></span>
+                        </div>
+                        <input type="range" id="quality-slider" min="10" max="100" value="80" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                    </div>
+
+                    <button onclick="compressImage()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] transition font-semibold rounded-xl flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                        下載壓縮圖片
+                    </button>
                 </div>
             </div>
-            
+
+            <!-- 工具 2：QR Code 產生器 -->
             <div id="tab-qrcode" class="tab-content bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl">
-                <h3 class="text-xl font-bold text-white mb-6">QR Code 產生器</h3>
-                <input type="text" id="qr-input" placeholder="輸入連結..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white mb-4">
-                <button onclick="generateQRCode()" class="w-full py-3 bg-emerald-600 rounded-xl font-semibold">產生</button>
+                <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="qr-code" class="text-emerald-500"></i> QR Code 產生器
+                </h3>
+                <p class="text-slate-400 text-sm mb-6">輸入任何網址或文字，立刻於本地生成離線高解析度二維碼。</p>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-slate-500 font-semibold uppercase mb-2">輸入網址或文本</label>
+                        <input type="text" id="qr-input" placeholder="https://example.com" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
+                    </div>
+
+                    <div class="flex flex-col md:flex-row items-center gap-8 py-4">
+                        <div class="bg-white p-4 rounded-2xl w-[200px] h-[200px] flex items-center justify-center shadow-lg" id="qr-container">
+                            <canvas id="qr-canvas" class="hidden"></canvas>
+                            <div id="qr-placeholder" class="text-slate-400 text-center text-xs">輸入內容後生成</div>
+                        </div>
+                        <div class="flex-grow space-y-3 w-full">
+                            <button onclick="generateQRCode()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] transition font-semibold rounded-xl">
+                                生成 QR Code
+                            </button>
+                            <button onclick="downloadQRCode()" id="btn-download-qr" disabled class="w-full py-3 bg-slate-800 text-slate-500 font-semibold rounded-xl cursor-not-allowed transition flex items-center justify-center gap-2">
+                                <i data-lucide="download" class="w-5 h-5"></i>
+                                下載 QR Code
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
+            <!-- 工具 3：安全密碼產生器 -->
             <div id="tab-password" class="tab-content bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl">
-                <h3 class="text-xl font-bold text-white mb-6">安全密碼產生器</h3>
-                <input type="text" id="password-display" readonly class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-4 mb-4 text-amber-400 font-mono">
-                <button onclick="generatePassword()" class="w-full py-3 bg-amber-600 rounded-xl font-semibold">產生新密碼</button>
+                <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="key" class="text-amber-500"></i> 安全密碼產生器
+                </h3>
+                <p class="text-slate-400 text-sm mb-6">在本地端生成高強度隨機密碼，絕不上傳雲端，保護帳戶安全。</p>
+
+                <div class="space-y-6">
+                    <div class="relative">
+                        <input type="text" id="password-display" readonly placeholder="點擊下方按鈕生成密碼" class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-4 pr-12 py-4 text-lg font-mono text-amber-400 tracking-wider focus:outline-none text-center">
+                        <button onclick="copyPassword()" class="absolute right-3 top-3 p-2 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition" title="複製密碼">
+                            <i data-lucide="copy" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-300">密碼長度: <span id="pwd-len-val" class="font-bold text-white">16</span></span>
+                        </div>
+                        <input type="range" id="pwd-length" min="6" max="32" value="16" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="flex items-center gap-3 bg-slate-900 p-3 rounded-xl border border-slate-800 cursor-pointer hover:border-amber-500/30 transition">
+                            <input type="checkbox" id="inc-uppercase" checked class="w-4 h-4 rounded accent-amber-500">
+                            <span class="text-sm text-slate-300">大寫字母 (A-Z)</span>
+                        </label>
+                        <label class="flex items-center gap-3 bg-slate-900 p-3 rounded-xl border border-slate-800 cursor-pointer hover:border-amber-500/30 transition">
+                            <input type="checkbox" id="inc-lowercase" checked class="w-4 h-4 rounded accent-amber-500">
+                            <span class="text-sm text-slate-300">小寫字母 (a-z)</span>
+                        </label>
+                        <label class="flex items-center gap-3 bg-slate-900 p-3 rounded-xl border border-slate-800 cursor-pointer hover:border-amber-500/30 transition">
+                            <input type="checkbox" id="inc-numbers" checked class="w-4 h-4 rounded accent-amber-500">
+                            <span class="text-sm text-slate-300">數字 (0-9)</span>
+                        </label>
+                        <label class="flex items-center gap-3 bg-slate-900 p-3 rounded-xl border border-slate-800 cursor-pointer hover:border-amber-500/30 transition">
+                            <input type="checkbox" id="inc-symbols" checked class="w-4 h-4 rounded accent-amber-500">
+                            <span class="text-sm text-slate-300">特殊符號 (!@#)</span>
+                        </label>
+                    </div>
+
+                    <button onclick="generatePassword()" class="w-full py-3 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] transition font-semibold rounded-xl">
+                        生成隨機密碼
+                    </button>
+                </div>
             </div>
+
+            <!-- 橫幅廣告版位 -->
+            <div class="border border-slate-800 rounded-3xl p-4 bg-slate-950 flex flex-col items-center justify-center min-h-[150px] text-center">
+                <span class="text-xs text-slate-600 mb-2 font-mono">SPONSORED ADVERTISEMENT</span>
+                <div class="w-full h-[90px] bg-slate-900 rounded border border-dashed border-slate-800 flex items-center justify-center text-slate-500 text-sm">
+                    橫幅廣告 (728x90 Banner)
+                </div>
+            </div>
+
         </div>
     </main>
 
+    <!-- 頁尾 Footer -->
+    <footer class="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p>© 2026 CreatorTools. 隱私安全保證，所有數據均在本地端運算。</p>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-slate-300 transition">使用條款</a>
+                <a href="#" class="hover:text-slate-300 transition">隱私政策</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 腳本邏輯 Scripts -->
     <script>
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.className = "tab-btn flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300 font-medium text-left transition w-full");
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            document.getElementById(`btn-${tabId}`).className = "tab-btn active flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-medium text-left transition w-full";
+        // 客製化 Toast 提示元件 (取代瀏覽器內建 alert)
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgClass = type === 'success' ? 'bg-slate-950 border-emerald-500/30' : 'bg-slate-950 border-rose-500/30';
+            const textClass = type === 'success' ? 'text-emerald-400' : 'text-rose-400';
+            const icon = type === 'success' ? 'check-circle' : 'alert-circle';
+
+            toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl border ${bgClass} ${textClass} shadow-xl transition-all duration-300 transform translate-x-10 opacity-0 pointer-events-auto max-w-sm`;
+            toast.innerHTML = `
+                <i data-lucide="${icon}" class="w-5 h-5 shrink-0"></i>
+                <span class="text-sm font-medium text-slate-200">${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            // 動畫入格
+            setTimeout(() => {
+                toast.classList.remove('translate-x-10', 'opacity-0');
+            }, 10);
+
+            // 3秒後自動消逝
+            setTimeout(() => {
+                toast.classList.add('translate-x-10', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
         }
+
+        // 分頁切換邏輯
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300 font-medium text-left transition w-full";
+            });
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            if (tabId === 'compressor') activeBtn.className = "tab-btn active flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-medium text-left transition w-full";
+            if (tabId === 'qrcode') activeBtn.className = "tab-btn active flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-600 text-white font-medium text-left transition w-full";
+            if (tabId === 'password') activeBtn.className = "tab-btn active flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-600 text-white font-medium text-left transition w-full";
+        }
+
+        // 初始化圖示
         lucide.createIcons();
+
+        // --- 圖片壓縮邏輯 ---
+        let originalFile = null;
+        const imageInput = document.getElementById('image-input');
+        const qualitySlider = document.getElementById('quality-slider');
+        const qualityVal = document.getElementById('quality-val');
+
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                originalFile = e.target.files[0];
+                document.getElementById('compressor-workspace').classList.remove('hidden');
+                document.getElementById('original-size').innerText = formatBytes(originalFile.size);
+                updateCompressedEstimate();
+                showToast('圖片載入成功！');
+            }
+        });
+
+        qualitySlider.addEventListener('input', (e) => {
+            qualityVal.innerText = `${e.target.value}%`;
+            if (originalFile) {
+                updateCompressedEstimate();
+            }
+        });
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function updateCompressedEstimate() {
+            const quality = qualitySlider.value / 100;
+            const estimated = originalFile.size * quality * 0.85; 
+            document.getElementById('compressed-size').innerText = formatBytes(estimated);
+        }
+
+        function compressImage() {
+            if (!originalFile) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(originalFile);
+            reader.onload = function (event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    const quality = qualitySlider.value / 100;
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                    
+                    const link = document.createElement('a');
+                    link.download = `compressed_${originalFile.name.split('.')[0]}.jpg`;
+                    link.href = compressedDataUrl;
+                    link.click();
+                    showToast('圖片壓縮並下載成功！');
+                };
+            };
+        }
+
+        // --- QR Code 產生邏輯 (完全本地端離線運作) ---
+        let qr = null;
+        function generateQRCode() {
+            const inputVal = document.getElementById('qr-input').value.trim();
+            if (!inputVal) {
+                showToast('請輸入網址或文字！', 'error');
+                return;
+            }
+
+            const canvas = document.getElementById('qr-canvas');
+            const placeholder = document.getElementById('qr-placeholder');
+            
+            canvas.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+
+            if (!qr) {
+                qr = new QRious({
+                    element: canvas,
+                    size: 200,
+                    level: 'H'
+                });
+            }
+            qr.value = inputVal;
+
+            const dlBtn = document.getElementById('btn-download-qr');
+            dlBtn.disabled = false;
+            dlBtn.className = "w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-semibold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer";
+            
+            showToast('QR Code 生成成功！');
+        }
+
+        function downloadQRCode() {
+            const canvas = document.getElementById('qr-canvas');
+            if (canvas.classList.contains('hidden')) return;
+            
+            const link = document.createElement('a');
+            link.download = 'qrcode.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast('QR Code 已開始下載！');
+        }
+
+        // --- 安全密碼產生邏輯 ---
+        const pwdLength = document.getElementById('pwd-length');
+        const pwdLenVal = document.getElementById('pwd-len-val');
         
-        function generateQRCode() { /* QR Logic */ }
+        pwdLength.addEventListener('input', (e) => {
+            pwdLenVal.innerText = e.target.value;
+        });
+
         function generatePassword() {
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-            let pwd = "";
-            for(let i=0; i<16; i++) pwd += chars.charAt(Math.floor(Math.random() * chars.length));
-            document.getElementById('password-display').value = pwd;
+            const length = parseInt(pwdLength.value);
+            const incUpper = document.getElementById('inc-uppercase').checked;
+            const incLower = document.getElementById('inc-lowercase').checked;
+            const incNumbers = document.getElementById('inc-numbers').checked;
+            const incSymbols = document.getElementById('inc-symbols').checked;
+
+            const upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const lowerChars = "abcdefghijklmnopqrstuvwxyz";
+            const numChars = "0123456789";
+            const symChars = "!@#$%^&*()_+~`|}{[]:;?><,./-=";
+
+            let charPool = "";
+            if (incUpper) charPool += upperChars;
+            if (incLower) charPool += lowerChars;
+            if (incNumbers) charPool += numChars;
+            if (incSymbols) charPool += symChars;
+
+            if (charPool === "") {
+                showToast("請至少選擇一種字符類型！", "error");
+                return;
+            }
+
+            let password = "";
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * charPool.length);
+                password += charPool.charAt(randomIndex);
+            }
+
+            document.getElementById('password-display').value = password;
+            showToast("密碼生成成功！");
+        }
+
+        function copyPassword() {
+            const display = document.getElementById('password-display');
+            if (!display.value) {
+                showToast("請先點擊按鈕生成密碼！", "error");
+                return;
+            }
+            display.select();
+            document.execCommand('copy');
+            showToast('密碼已成功複製到剪貼簿！');
         }
     </script>
 </body>
